@@ -59,13 +59,12 @@ export async function getPlayerStats(usernames: string[], cb: (msg: string) => P
     }
     await cb(`fetched ${count} TL replays from ${username}`)
   }
-
-  let replays = []
-
-  if(replays.length == 0){
+  if(replayIds.size == 0){
     await cb(`no replays able to be fetched`)
     return undefined
   }
+
+  let replays = []
 
   for (const id of replayIds) {
     try{
