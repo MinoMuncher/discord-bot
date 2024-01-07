@@ -1,0 +1,20 @@
+{
+  "name": "discord-bot",
+  "module": "src/index.ts",
+  "type": "module",
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.44",
+    "canvas": "^2.11.2",
+    "chart.js": "^4.4.1",
+    "chartjs-plugin-colorschemes": "^0.4.0",
+    "chartjs-plugin-datalabels": "^2.2.0",
+    "discord.js": "^14.14.1",
+    "file-system-cache": "^2.4.4"
+  }
+}
