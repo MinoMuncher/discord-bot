@@ -91,7 +91,7 @@ client.once("ready", () => {
             return
         }
         else{
-            const sent = await message.reply(`\n\ninitializing munching process for ${names.join(', ')}`)
+            const sent = await message.reply(`initializing munching process for ${names.join(', ')}`)
             let content = sent.content
             const cb = async (msg: string)=>{
               content = `${content}\n${msg}`
@@ -99,7 +99,10 @@ client.once("ready", () => {
             }
             let stats = await getPlayerStats(names, cb)
             if(stats===undefined)return
-            if(Object.values(stats).length==0)return
+            if(Object.values(stats).length==0){
+              await cb(`empty stat output`)
+              return
+            }
             let graphs
             try{
                 graphs = await generateGraphs(stats)
@@ -115,4 +118,3 @@ client.once("ready", () => {
         }
     }
   });
-  
