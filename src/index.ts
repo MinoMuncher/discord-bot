@@ -126,6 +126,10 @@ client.on("messageCreate", async (message) => {
     names.shift()
     const pLen = names.length
     names = names.map(filterString).filter(name => name != "")
+    if(names.length>10){
+      message.reply("the maximum amount of names to search TL is 10")
+      return
+    }
     if (names.length == 0) {
       if(pLen>0){
         message.reply("the names you included were all invalid!")
