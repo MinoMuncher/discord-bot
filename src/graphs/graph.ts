@@ -11,33 +11,41 @@ export async function generateGraphs(stats: Players) {
         let radarData: { [key: string]: number[] } = {}
         for (const key in stats) {
             let s = stats[key]
-            radarData[key] = [s.apm, s.openerApm, s.pps, s.midgameApm]
+            radarData[key] = [s.pps, s.openerApm, s.openerPps, s.apm, s.midgamePps, s.midgameApm]
         }
         const radarConfig =
             [{
-                label: "APM",
+                label: "PPS",
                 min: 0,
-                max: 200,
+                max: 5,
             }, {
                 label: "Opener APM",
                 min: 0,
                 max: 250,
             }, {
-                label: "PPS",
+                label: "Opener PPS",
                 min: 0,
                 max: 5,
             }, {
+                label: "APM",
+                min: 0,
+                max: 250,
+            },{
+                label: "Midgame PPS",
+                min: 0,
+                max: 5,
+            },{
                 label: "Midgame APM",
                 min: 0,
                 max: 250,
-            }]
+            },]
         imageDatas.push(await createRadarGraph(radarData, radarConfig))
     }
     {
         let radarData: { [key: string]: number[] } = {}
         for (const key in stats) {
             let s = stats[key]
-            radarData[key] = [s.upstackApl, s.tEfficiency, s.downstackApl, s.iEfficiency]
+            radarData[key] = [s.upstackApl, s.cheeseApl, s.tEfficiency, s.downstackApl, s.apl, s.iEfficiency]
         }
         const radarConfig =
             [{
@@ -45,6 +53,10 @@ export async function generateGraphs(stats: Players) {
                 min: 0,
                 max: 3,
             }, {
+                label: "Cheese APL",
+                min: 0,
+                max: 3,
+            },{
                 label: "T Piece Efficiency",
                 min: 0,
                 max: 1,
@@ -53,6 +65,10 @@ export async function generateGraphs(stats: Players) {
                 min: 0,
                 max: 3,
             }, {
+                label: "APL",
+                min: 0,
+                max: 3,
+            },{
                 label: "I Piece Efficiency",
                 min: 0,
                 max: 1,
@@ -63,7 +79,7 @@ export async function generateGraphs(stats: Players) {
         let radarData: { [key: string]: number[] } = {}
         for (const key in stats) {
             let s = stats[key]
-            radarData[key] = [s.stackHeight, s.averageSpikePotential, s.garbageHeight, s.averageDefencePotential]
+            radarData[key] = [s.stackHeight, s.averageSpikePotential, s.garbageHeight, s.averageDefencePotential, s.blockfishScore]
         }
         const radarConfig =
             [{
@@ -82,6 +98,10 @@ export async function generateGraphs(stats: Players) {
                 label: "Board Defence Potential",
                 min: 17,
                 max: 23,
+            }, {
+                label: "Pieces To Garbage",
+                min: 1,
+                max: 3
             }]
         imageDatas.push(await createRadarGraph(radarData, radarConfig))
     }
@@ -126,6 +146,31 @@ export async function generateGraphs(stats: Players) {
                 min: 0,
                 max: 560,
             }
+            ]
+        imageDatas.push(await createRadarGraph(radarData, radarConfig))
+    }
+    {
+        let radarData: { [key: string]: number[] } = {}
+        for (const key in stats) {
+            let s = stats[key]
+            radarData[key] = [s.app, s.comboChainApp, s.btbChainApp]
+        }
+        const radarConfig =
+            [
+                {
+                    label: "APP",
+                    min: 0,
+                    max: 1.4,
+                },
+                {
+                    label: "Combo Chain APP",
+                    min: 0,
+                    max: 3,
+                },                {
+                    label: "B2B Chain APP",
+                    min: 0,
+                    max: 1.6,
+                },
             ]
         imageDatas.push(await createRadarGraph(radarData, radarConfig))
     }

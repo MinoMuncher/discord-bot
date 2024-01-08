@@ -44,6 +44,8 @@ export type PlayerStats = {
     midgameApm: number,
 
     pps: number,
+    midgamePps: number,
+    openerPps: number,
     btbWellshifts: number,
 
     btbChainEfficiency: number,
@@ -69,6 +71,7 @@ export type PlayerStats = {
     averageDefencePotential: number,
 
     ppsVariance: number,
+    blockfishScore: number
 }
 export type Players = {[key:string] :PlayerStats}
 
