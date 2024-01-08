@@ -1,6 +1,13 @@
 import { Client, GatewayIntentBits } from "discord.js";
 import { getPlayerStats, parseReplayData, getReplayData } from "./replay";
 import { generateGraphs } from "./graphs/graph";
+import { RateLimiter } from 'discord.js-rate-limiter';
+let rateLimiter = new RateLimiter(1, 2000);
+
+function filterString(input: string): string {
+  const filteredString = input.replace(/[^a-zA-Z0-9-_]/g, '');
+  return filteredString;
+}
 
 try{
   const auth = await fetch("https://tetr.io/api/users/authenticate", {
@@ -46,6 +53,12 @@ client.on("messageCreate", async (message) => {
     message.reply("!munch username1 username2 username3...")
     return
   }
+
+  if (rateLimiter.take(message.author.id)) {
+      await message.reply(`You are being rate limited, try again later`);
+      return;
+  }
+
   if (msg.startsWith("munch") && message.attachments.size > 0) {
 
     const sent = await message.reply(`\n\ninitializing munching process for ${message.attachments.size} replay file${message.attachments.size == 1 ? "" : "s"}`)
@@ -57,11 +70,15 @@ client.on("messageCreate", async (message) => {
 
     let names = message.content.split(" ")
     names.shift()
-    names = names.map(name => name.trim().toLocaleLowerCase()).filter(name => name != "")
+    names = names.map(filterString).map(name => name.trim().toLocaleLowerCase()).filter(name => name != "")
 
     let replays = []
 
     for (const attachment of message.attachments.values()) {
+      if(attachment.size > 2.5e+7){
+        await cb("file too big!")
+        return
+      }
       const url = attachment.url
       try {
         const response = await fetch(url);
@@ -105,11 +122,18 @@ client.on("messageCreate", async (message) => {
     return
   }
   if (msg.startsWith(`munch`)) {
-    let names = message.content.split(" ")
+    let names = message.content.split(" ").map(name => name.trim().toLocaleLowerCase())
     names.shift()
-    names = names.map(name => name.trim().toLocaleLowerCase()).filter(name => name != "")
+    const pLen = names.length
+    names = names.map(filterString).filter(name => name != "")
     if (names.length == 0) {
-      message.reply("you must include names!")
+      if(pLen>0){
+        message.reply("the names you included were all invalid!")
+      }
+      else{
+        message.reply("you must include names!")
+      }
+
       return
     }
     else {
