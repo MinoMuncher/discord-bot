@@ -59,11 +59,11 @@ export async function getPlayerStats(usernames: string[], cb: (msg: string) => P
       const userResponse = await fetch(`https://ch.tetr.io/api/users/${username}`, opts);
       userData = await userResponse.json()
     } catch (_) {
-      await cb(`error fetching user profile of ${username}`)
+      await cb(`error fetching user profile of \`${username}\``)
       return undefined
     }
     if (!userData.success) {
-      await cb(`user ${username} does not exist`)
+      await cb(`user \`${username}\` does not exist`)
       return undefined
     }
 
@@ -74,7 +74,7 @@ export async function getPlayerStats(usernames: string[], cb: (msg: string) => P
 
       ids = streamData.data.records.map((record: any) => record.replayid);
     } catch (_) {
-      await cb(`error fetching TL replay ids of ${username}`)
+      await cb(`error fetching TL replay ids of \`${username}\``)
       return undefined
     }
 
@@ -82,7 +82,7 @@ export async function getPlayerStats(usernames: string[], cb: (msg: string) => P
       replayIds.add(id)
     }
 
-    await cb(`fetched ${ids.length} TL replays from ${username}`)
+    await cb(`fetched ${ids.length} TL replays from \`${username}\``)
   }
   if (replayIds.size == 0) {
     await cb(`no replays able to be fetched`)

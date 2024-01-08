@@ -141,7 +141,7 @@ client.on("messageCreate", async (message) => {
       return
     }
     else {
-      const sent = await message.reply(`initializing munching process for ${names.join(', ')}`)
+      const sent = await message.reply(`initializing munching process for \`${names.join(', ')}\``)
       let content = sent.content
       const cb = async (msg: string) => {
         content = `${content}\n${msg}`
