@@ -10,12 +10,14 @@
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.44",
+    "@types/yargs-parser": "^21.0.3",
     "canvas": "^2.11.2",
     "chart.js": "^4.4.1",
     "chartjs-plugin-colorschemes": "^0.4.0",
     "chartjs-plugin-datalabels": "^2.2.0",
     "discord.js": "^14.14.1",
     "discord.js-rate-limiter": "^1.3.2",
-    "file-system-cache": "^2.4.4"
+    "file-system-cache": "^2.4.4",
+    "yargs-parser": "^21.1.1"
   }
 }

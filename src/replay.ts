@@ -51,7 +51,7 @@ export function parseReplayData(players: string[], replays: string[]) {
   })
 }
 
-export async function getPlayerStats(usernames: string[], cb: (msg: string) => Promise<void>) {
+export async function getPlayerStats(usernames: string[], games: number, cb: (msg: string) => Promise<void>) {
   let replayIds = new Set<string>()
   for (const username of usernames) {
     let userData: any
@@ -78,8 +78,8 @@ export async function getPlayerStats(usernames: string[], cb: (msg: string) => P
       return undefined
     }
 
-    for (const id of ids) {
-      replayIds.add(id)
+    for (let i = 0; i < Math.min(ids.length,games); i++) {
+      replayIds.add(ids[i])
     }
 
     await cb(`fetched ${ids.length} TL replays from \`${username}\``)

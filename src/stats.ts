@@ -71,7 +71,11 @@ export type PlayerStats = {
     averageDefencePotential: number,
 
     ppsVariance: number,
-    blockfishScore: number
+    blockfishScore: number,
+
+    burstPps: number,
+    attackDelayRate: number
+    preAttackDelayRate: number
 }
 export type Players = {[key:string] :PlayerStats}
 
