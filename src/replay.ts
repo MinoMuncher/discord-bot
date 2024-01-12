@@ -34,6 +34,10 @@ export function parseReplayData(players: string[], replays: string[]) {
           const res = JSON.parse(raw)
           resolve(res)
         },
+        error(_socket, error){
+          console.error(`communcation error with tcp action parser: ${error}`)
+          reject()
+        },
         open(socket) {
           const input = `${players.join(',')}\n${replays.length}\n${replays.join('\n')}\n`
           let buffer = Buffer.from(input, 'utf8')
