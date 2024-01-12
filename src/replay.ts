@@ -25,6 +25,11 @@ export async function getReplayData(replay: string) {
 
 export function parseReplayData(players: string[], replays: string[]) {
   return new Promise<Players>((resolve, reject) => {
+
+    const impatient = setTimeout(()=>{
+      console.log("action parser timed out!")
+      return reject()
+    }, 1000*60*10)
     Bun.connect({
       hostname: "127.0.0.1",
       port: 8081,
@@ -32,10 +37,12 @@ export function parseReplayData(players: string[], replays: string[]) {
         data(_socket, data) {
           const raw = data.toString()
           const res = JSON.parse(raw)
+          clearTimeout(impatient)
           resolve(res)
         },
         error(_socket, error){
-          console.error(`communcation error with tcp action parser: ${error}`)
+          console.log(`communcation error with tcp action parser: ${error}`)
+          clearTimeout(impatient)
           reject()
         },
         open(socket) {
@@ -48,6 +55,7 @@ export function parseReplayData(players: string[], replays: string[]) {
           socket.flush()
         },
         close(_) {
+          clearTimeout(impatient)
           reject()
         },
       },

@@ -6,7 +6,6 @@ import argParser from 'yargs-parser'
 
 
 const helpText = await Bun.file("src/help.txt").text()
-console.log(helpText)
 
 interface ParsedArguments {
   scale: boolean;
