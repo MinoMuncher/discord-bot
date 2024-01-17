@@ -15,16 +15,8 @@ const opts = {
   }
 }
 
-export async function getReplayData(replay: string) {
-  const response = await fetch("http://127.0.0.1:8080", {
-    method: "POST",
-    body: replay
-  })
-  return JSON.stringify(await response.json())
-}
-
 export function parseReplayData(players: string[], replays: string[]) {
-  return new Promise<Players>((resolve, reject) => {
+  return new Promise<string>((resolve, reject) => {
 
     const impatient = setTimeout(()=>{
       console.log("action parser timed out!")
@@ -36,9 +28,8 @@ export function parseReplayData(players: string[], replays: string[]) {
       socket: {
         data(_socket, data) {
           const raw = data.toString()
-          const res = JSON.parse(raw)
           clearTimeout(impatient)
-          resolve(res)
+          resolve(raw)
         },
         error(_socket, error){
           console.log(`communcation error with tcp action parser: ${error}`)
@@ -90,11 +81,14 @@ export async function getPlayerStats(usernames: string[], games: number, cb: (ms
       return undefined
     }
 
+    let added = 0;
+
     for (let i = 0; i < Math.min(ids.length,games); i++) {
+      added+=1;
       replayIds.add(ids[i])
     }
 
-    await cb(`fetched ${ids.length} TL replays from \`${username}\``)
+    await cb(`fetched ${added} TL replays from \`${username}\``)
   }
   if (replayIds.size == 0) {
     await cb(`no replays able to be fetched`)
@@ -108,24 +102,25 @@ export async function getPlayerStats(usernames: string[], games: number, cb: (ms
       const replay = await getReplay(id)
       replays.push(replay)
     } catch (error : any) {
-      if (error?.message === "csdotnet") {
-        await cb(`replay ${id} failed to be parsed, the parser may be out of date, please report`)
-      }else{
-        await cb(`replay ${id} failed to download!`)
-      }
+      await cb(`replay ${id} failed to download!`)
       return
     }
   }
 
-  let stats
   try {
-    stats = await parseReplayData(usernames, replays)
+    const response = await parseReplayData(usernames, replays)
+    let players : Players;
+    try{
+      players = JSON.parse(response);
+      return players
+    }catch(e){
+      await cb(response)
+      return undefined
+    }
   } catch (_) {
-    await cb(`error parsing replay data`)
+    await cb(`error parsing replay data, bad connection with action-parser`)
     return undefined
   }
-  await cb(`finished parsing replay data`)
-  return stats
 }
 
 
@@ -136,14 +131,9 @@ async function getReplay(id: string): Promise<string> {
     const replayResponse = await fetch(`https://tetr.io/api/games/${id}`, opts)
     if (replayResponse.status == 200) {
       const data: any = await replayResponse.json()
-      try {
-        const replayData = await getReplayData(JSON.stringify(data.game))
-        replayDataCache.set(id, replayData)
-        return replayData
-      }
-      catch (_) {
-        throw new Error("csdotnet")
-      }
+      const replayString = JSON.stringify(data.game)
+      replayDataCache.set(id, replayString)
+      return replayString
     } else {
       throw new Error("fetch error")
     }

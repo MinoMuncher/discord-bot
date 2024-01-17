@@ -1,8 +1,9 @@
 import { Client, GatewayIntentBits } from "discord.js";
-import { getPlayerStats, parseReplayData, getReplayData } from "./replay";
+import { getPlayerStats, parseReplayData} from "./replay";
 import { generateGraphs } from "./graphs/graph";
 import { RateLimiter } from 'discord.js-rate-limiter';
 import argParser from 'yargs-parser'
+import { Players } from "./stats";
 
 
 const helpText = await Bun.file("src/help.txt").text()
@@ -127,8 +128,7 @@ client.on("messageCreate", async (message) => {
           return
         }
         const text = await response.text();
-        const replayData = await getReplayData(text)
-        replays.push(replayData)
+        replays.push(text)
 
       } catch (error: any) {
         if (error?.message === "csdotnet") {
@@ -140,11 +140,18 @@ client.on("messageCreate", async (message) => {
       }
     }
 
-    let stats
+    let stats : Players;
     try {
-      stats = await parseReplayData(names, replays)
+      const response = await parseReplayData(names, replays)
+      let players : Players;
+      try{
+        stats = JSON.parse(response);
+      }catch(e){
+        await cb(response)
+        return
+      }
     } catch (_) {
-      await cb("Error parsing replays!")
+      await cb(`error parsing replay data, bad connection with action-parser`)
       return
     }
 
