@@ -130,12 +130,8 @@ client.on("messageCreate", async (message) => {
         const text = await response.text();
         replays.push(text)
 
-      } catch (error: any) {
-        if (error?.message === "csdotnet") {
-          await cb(`replay <${url}> failed to be parsed, either the replay is too old or the parser may be out of date`)
-        } else {
-          await cb("Error fetching files!")
-        }
+      } catch (_) {
+        await cb("Error fetching files!")
         return
       }
     }
@@ -143,7 +139,6 @@ client.on("messageCreate", async (message) => {
     let stats : Players;
     try {
       const response = await parseReplayData(names, replays)
-      let players : Players;
       try{
         stats = JSON.parse(response);
       }catch(e){

@@ -136,7 +136,7 @@ export async function generateGraphs(stats: Players, norm: Normalization, scale:
             }, {
                 label: "Board Spike Potential",
                 min: 0,
-                max: scale ? scaleMax * edgeMult * 0.06 : 0.06,
+                max: scale ? scaleMax * edgeMult * 0.12 : 0.12,
                 format: (n: number) => `${((n * 100).toFixed(2))}%`
             }, {
                 label: "Garbage Height",
@@ -176,7 +176,7 @@ export async function generateGraphs(stats: Players, norm: Normalization, scale:
             [{
                 label: "B2B Chain Conversion Rate",
                 min: 0,
-                max: scale ? (norm == "average" ? scaleMax * 0.06 : Math.max(max[0], max[4])) * edgeMult : norm == "average" ? 0.06 : 0.14,
+                max: scale ? (norm == "average" ? scaleMax * 0.3 : Math.max(max[0], max[4])) * edgeMult : 0.3,
                 format: (n: number) => `${((n * 100).toFixed(2))}%`
             }, {
                 label: "B2B Chain Length",
@@ -197,7 +197,7 @@ export async function generateGraphs(stats: Players, norm: Normalization, scale:
             {
                 label: "Combo Chain Conversion Rate",
                 min: 0,
-                max: scale ? (norm == "average" ? scaleMax * 0.14 : Math.max(max[0], max[4])) * edgeMult : 0.14,
+                max: scale ? (norm == "average" ? scaleMax * 0.06 : Math.max(max[0], max[4])) * edgeMult : norm == "average" ?  0.06 : 0.2,
                 format: (n: number) => `${((n * 100).toFixed(2))}%`
             }, {
                 label: "Combo Chain Length",
@@ -287,7 +287,7 @@ export async function generateGraphs(stats: Players, norm: Normalization, scale:
                 {
                     label: "Attack Delay Rate",
                     min: 0,
-                    max: scale ? (norm == "average" ? scaleMax * 0.15 : Math.max(max[2], max[5])) * edgeMult : 0.15,
+                    max: scale ? (norm == "average" ? scaleMax * 0.2 : Math.max(max[2], max[5])) * edgeMult : 0.2,
                     format: (n: number) => `${((n * 100).toFixed(2))}%`
                 },
                 {
