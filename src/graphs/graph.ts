@@ -118,7 +118,7 @@ export async function generateGraphs(stats: Players, norm: Normalization, scale:
         for (const key in stats) {
             let s = stats[key]
             radarData[key] = [s.stackHeight, s.averageSpikePotential, s.garbageHeight, s.averageDefencePotential, s.blockfishScore]
-            const scales = [s.stackHeight / 10, s.averageSpikePotential / 0.06, s.garbageHeight / 10, (s.averageDefencePotential - 17) / 6, (s.blockfishScore - 1)/2]
+            const scales = [s.stackHeight / 10, s.averageSpikePotential / 0.12, s.garbageHeight / 10, (s.averageDefencePotential - 17) / 6, (s.blockfishScore - 1)/2]
             radarData[key].forEach((key, idx) => {
                 max[idx] = Math.max(max[idx], key)
             })
@@ -164,7 +164,7 @@ export async function generateGraphs(stats: Players, norm: Normalization, scale:
         for (const key in stats) {
             let s = stats[key]
             radarData[key] = [s.btbChainEfficiency, s.btbChain, s.btbChainAttack, s.btbChainApm, s.comboChainEfficiency, s.comboChain, s.comboChainAttack, s.comboChainApm]
-            const scales = [s.btbChainEfficiency / 0.06, s.btbChain / 11.4, s.btbChainAttack / 70, s.btbChainApm / 300, s.comboChainEfficiency / 0.14, s.comboChain / 10, s.comboChainAttack / 20, s.comboChainApm / 560]
+            const scales = [s.btbChainEfficiency / 0.3, s.btbChain / 11.4, s.btbChainAttack / 70, s.btbChainApm / 300, s.comboChainEfficiency / 0.06, s.comboChain / 10, s.comboChainAttack / 20, s.comboChainApm / 560]
             radarData[key].forEach((key, idx) => {
                 max[idx] = Math.max(max[idx], key)
             })
@@ -197,7 +197,7 @@ export async function generateGraphs(stats: Players, norm: Normalization, scale:
             {
                 label: "Combo Chain Conversion Rate",
                 min: 0,
-                max: scale ? (norm == "average" ? scaleMax * 0.06 : Math.max(max[0], max[4])) * edgeMult : norm == "average" ?  0.06 : 0.2,
+                max: scale ? (norm == "average" ? scaleMax * 0.06 : Math.max(max[0], max[4])) * edgeMult : norm == "average" ?  0.06 : 0.3,
                 format: (n: number) => `${((n * 100).toFixed(2))}%`
             }, {
                 label: "Combo Chain Length",
