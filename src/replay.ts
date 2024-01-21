@@ -22,6 +22,7 @@ export function parseReplayData(players: string[], replays: string[][], cb: (s: 
     let replayResponses : Promise<void>[]= []
     let currentBuffer = ""
     let failed : string[] = []
+    let success = false
 
     const impatient = setTimeout(() => {
       console.log("action parser timed out!")
@@ -51,6 +52,7 @@ export function parseReplayData(players: string[], replays: string[][], cb: (s: 
           try{
             players = JSON.parse(split[0])
             clearTimeout(impatient)
+            success = true
             Promise.allSettled(replayResponses).finally(()=>{
               resolve([players, failed])
             })
@@ -58,24 +60,18 @@ export function parseReplayData(players: string[], replays: string[][], cb: (s: 
             reject()
           }
         }
-
       }
-
-      /*
-      clearTimeout(impatient)
-      resolve(dataString)
-      socket.destroy(); // kill client after server's response*/
     });
 
     socket.on('close', function () {
       clearTimeout(impatient)
-      reject()
+      if(!success)reject()
     });
 
     socket.on('error', function (_){
       console.log('error');
       clearTimeout(impatient)
-      reject()
+      if(!success)reject()
     })
   })
 }
