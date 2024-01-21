@@ -1,5 +1,5 @@
 import { Client, GatewayIntentBits } from "discord.js";
-import { getPlayerStats, parseReplayData} from "./replay";
+import { getPlayerStats, parseReplayData } from "./replay";
 import { generateGraphs } from "./graphs/graph";
 import { RateLimiter } from 'discord.js-rate-limiter';
 import argParser from 'yargs-parser'
@@ -128,7 +128,7 @@ client.on("messageCreate", async (message) => {
           return
         }
         const text = await response.text();
-        replays.push(text)
+        replays.push([url, text])
 
       } catch (_) {
         await cb("Error fetching files!")
@@ -136,17 +136,12 @@ client.on("messageCreate", async (message) => {
       }
     }
 
-    let stats : Players;
+    let stats: Players;
+    let failed: string[]
     try {
-      const response = await parseReplayData(names, replays)
-      try{
-        stats = JSON.parse(response);
-      }catch(e){
-        await cb(response)
-        return
-      }
+      [stats, failed] = await parseReplayData(names, replays, cb)
     } catch (_) {
-      await cb(`error parsing replay data, bad connection with action-parser`)
+      await cb(`error parsing replay data`)
       return
     }
 
@@ -160,7 +155,7 @@ client.on("messageCreate", async (message) => {
     await sent.delete()
     let files = graphs.map(buffer => { return { attachment: buffer, name: 'graph.webp' } })
     files.push({ attachment: Buffer.from(JSON.stringify(stats)), name: "rawStats.json" })
-    message.reply({ files })
+    message.reply({ files, content: generateFailedString(failed) })
     return
   }
   else {
@@ -186,7 +181,14 @@ client.on("messageCreate", async (message) => {
       content = `${content}\n${msg}`
       await sent.edit(content)
     }
-    let stats = await getPlayerStats(names, args.games, cb)
+    let stats: Players;
+    let failed: string[]
+    try {
+      [stats, failed] = await getPlayerStats(names, args.games, cb)
+    } catch (_) {
+      await cb(`error parsing replay data`)
+      return
+    }
     if (stats === undefined) return
     if (Object.values(stats).length == 0) {
       await cb(`empty stat output`)
@@ -202,7 +204,12 @@ client.on("messageCreate", async (message) => {
     await sent.delete()
     let files = graphs.map(buffer => { return { attachment: buffer, name: 'graph.webp' } })
     files.push({ attachment: Buffer.from(JSON.stringify(stats)), name: "rawStats.json" })
-    message.reply({ files })
+    message.reply({ files, content: generateFailedString(failed) })
     return
   }
 });
+
+function generateFailedString(failed: string[]) {
+  if (failed.length == 0) return "all replays were parsed"
+  return `the following replays failed: ${failed.join('\n')}`
+}
