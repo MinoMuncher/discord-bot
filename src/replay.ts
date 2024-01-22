@@ -25,8 +25,7 @@ export function parseReplayData(players: string[], replays: string[][], cb: (s: 
     let success = false
 
     const impatient = setTimeout(() => {
-      console.log("action parser timed out!")
-      return reject()
+      return reject(Error("action parser timed out"))
     }, 1000 * 5 * 60)
 
 
@@ -39,40 +38,45 @@ export function parseReplayData(players: string[], replays: string[][], cb: (s: 
     socket.on('data', function (data) {
       const dataString = data.toString()
       currentBuffer+=dataString
-      if(currentBuffer.includes("\n")){
-        const split = currentBuffer.split("\n")
-        currentBuffer = split[1]
-        if(replayResponses.length<replays.length){
-          if(split[0].trim()!="success"){
-            failed.push(replays[replayResponses.length][0])
-          }
-          replayResponses.push(cb(`${replays[replayResponses.length][0]}: ${split[0]}`))
-        }else{
-          let players : Players
-          try{
-            players = JSON.parse(split[0])
-            clearTimeout(impatient)
-            success = true
-            Promise.allSettled(replayResponses).finally(()=>{
-              resolve([players, failed])
-            })
-          }catch(_){
-            reject()
-          }
-        }
+      while(currentBuffer.includes("\n")){
+        parseLine()
       }
     });
 
     socket.on('close', function () {
       clearTimeout(impatient)
-      if(!success)reject()
+      if(!success)reject(Error("socket closed unexpectedly"))
     });
 
-    socket.on('error', function (_){
-      console.log('error');
+    socket.on('error', function (e){
       clearTimeout(impatient)
-      if(!success)reject()
+      if(!success)reject(e)
     })
+
+    function parseLine(){
+      let firstL = currentBuffer.indexOf('\n')
+      const line = currentBuffer.substring(0, firstL)
+      currentBuffer = currentBuffer.substring(firstL+1)
+
+      if(replayResponses.length<replays.length){
+        if(line.trim()!="success"){
+          failed.push(replays[replayResponses.length][0])
+        }
+        replayResponses.push(cb(`${replays[replayResponses.length][0]}: ${line}`))
+      }else{
+        let players : Players
+        try{
+          players = JSON.parse(line)
+          clearTimeout(impatient)
+          success = true
+          Promise.allSettled(replayResponses).finally(()=>{
+            resolve([players, failed])
+          })
+        }catch(_){
+          reject(Error("action parser last line corrupted"))
+        }
+      }
+    }
   })
 }
 
@@ -133,8 +137,9 @@ export async function getPlayerStats(usernames: string[], games: number, cb: (ms
   try {
     const [players, failed] = await parseReplayData(usernames, replays, cb)
     return [players, failed]
-  } catch (_) {
+  } catch (e) {
     await cb(`error parsing replay data, bad connection with action-parser`)
+    console.log("ERROR PARSING REPLAY DATA: ",e)
     throw Error()
   }
 }

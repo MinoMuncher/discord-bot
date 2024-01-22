@@ -140,7 +140,8 @@ client.on("messageCreate", async (message) => {
     let failed: string[]
     try {
       [stats, failed] = await parseReplayData(names, replays, cb)
-    } catch (_) {
+    } catch (e) {
+      console.log("ERROR PARSING REPLAY DATA: ",e)
       await cb(`error parsing replay data`)
       return
     }
