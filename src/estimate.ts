@@ -61,7 +61,7 @@ function normalizeStats(stats: PlayerStats){
     }
 }
 
-const handler = tf.io.fileSystem("/Users/mattzhu/Documents/tetris/custom-stats/discord-bot/src/util/model/model.json");
+const handler = tf.io.fileSystem("src/util/model/model.json");
 const model = await tf.loadLayersModel(handler)
 
 export function estimateRating(stats: PlayerStats){
