@@ -1,91 +1,53 @@
 
 import { type Players } from './stats'
-import net from 'net'
-import Cache from "file-system-cache";
+import { SyncSocket } from './util/tcp'
+import { MD5 } from 'bun'
 
-const replayDataCache = Cache({
-  basePath: "./.replayDataCache",
-  hash: "sha1",
-  ttl: 60 * 60 * 24
-});
+export async function parseReplayData(players: string[], replayIDs: string[], replayStrings: [string, string][], cb: (s: string)=>Promise<void>) : Promise<[Players, string[]]>{
+  const socket = await SyncSocket.CreateAsync({port: 8081})
+  socket.writeLine(players.join(','))
+  let replayResponses = []
+  let failed = []
 
-const opts = {
-  headers: {
-    "Authorization": `Bearer ${Bun.env.TETRIO_TOKEN}`,
-    "Accept": `application/json`
+  socket.writeLine(String(replayIDs.length))
+
+  for(let i = 0; i < replayIDs.length; i++){
+    socket.writeLine(replayIDs[i])
+    const response = await socket.readLine()
+    if(response!="success")failed.push(replayIDs[i])
+    replayResponses.push(cb(`${replayIDs[i]}: ${response}`))
   }
-}
 
-export function parseReplayData(players: string[], replays: string[][], cb: (s: string)=>Promise<void>) {
-  return new Promise<[Players, string[]]>((resolve, reject) => {
+  socket.writeLine(String(replayStrings.length))
 
-    let replayResponses : Promise<void>[]= []
-    let currentBuffer = ""
-    let failed : string[] = []
-    let success = false
-
-    const impatient = setTimeout(() => {
-      return reject(Error("action parser timed out"))
-    }, 1000 * 5 * 60)
-
-
-    let socket = new net.Socket();
-    socket.connect(8081, '127.0.0.1', function () {
-      const input = `${players.join(',')}\n${replays.length}\n${replays.map(replay=>replay[1]).join('\n')}\n`
-      socket.write(input)
-    });
-
-    socket.on('data', function (data) {
-      const dataString = data.toString()
-      currentBuffer+=dataString
-      while(currentBuffer.includes("\n")){
-        parseLine()
-      }
-    });
-
-    socket.on('close', function () {
-      clearTimeout(impatient)
-      if(!success)reject(Error("socket closed unexpectedly"))
-    });
-
-    socket.on('error', function (e){
-      clearTimeout(impatient)
-      if(!success)reject(e)
-    })
-
-    function parseLine(){
-      let firstL = currentBuffer.indexOf('\n')
-      const line = currentBuffer.substring(0, firstL)
-      currentBuffer = currentBuffer.substring(firstL+1)
-
-      if(replayResponses.length<replays.length){
-        if(line.trim()!="success"){
-          failed.push(replays[replayResponses.length][0])
-        }
-        replayResponses.push(cb(`${replays[replayResponses.length][0]}: ${line}`))
-      }else{
-        let players : Players
-        try{
-          players = JSON.parse(line)
-          clearTimeout(impatient)
-          success = true
-          Promise.allSettled(replayResponses).finally(()=>{
-            resolve([players, failed])
-          })
-        }catch(_){
-          reject(Error("action parser last line corrupted"))
-        }
-      }
+  for(let i = 0; i < replayStrings.length; i++){
+    const replay = replayStrings[i][1]
+    const hasher = new MD5()
+    hasher.update(replay)
+    const hash = hasher.digest("hex")
+    socket.writeLine(hash)
+    const cached = await socket.readLine()
+    if(cached=="false"){
+      socket.writeLine(replay)
+      const response = await socket.readLine()
+      if(response!="success")failed.push(replayStrings[i][0])
+      replayResponses.push(cb(`${replayStrings[i][0]}: ${response}`))
+    }else{
+      replayResponses.push(cb(`${replayStrings[i][0]}: success`))
     }
-  })
+  }
+  const stats : Players = JSON.parse(await socket.readLine())
+  
+  return [stats, failed]
 }
 
-export async function getPlayerStats(usernames: string[], games: number, cb: (msg: string) => Promise<void>) : Promise<[Players, string[]]>{
+
+export async function getLeagueReplayIds(usernames: string[], games: number, cb: (msg: string) => Promise<void>) : Promise<string[]>{
   let replayIds = new Set<string>()
   for (const username of usernames) {
     let userData: any
     try {
-      const userResponse = await fetch(`https://ch.tetr.io/api/users/${username}`, opts);
+      const userResponse = await fetch(`https://ch.tetr.io/api/users/${username}`);
       userData = await userResponse.json()
     } catch (_) {
       await cb(`error fetching user profile of \`${username}\``)
@@ -98,7 +60,7 @@ export async function getPlayerStats(usernames: string[], games: number, cb: (ms
 
     let ids: string[]
     try {
-      const streamResponse = await fetch(`https://ch.tetr.io/api/streams/league_userrecent_${userData.data.user._id}`, opts);
+      const streamResponse = await fetch(`https://ch.tetr.io/api/streams/league_userrecent_${userData.data.user._id}`);
       const streamData: any = await streamResponse.json();
 
       ids = streamData.data.records.map((record: any) => record.replayid);
@@ -116,49 +78,9 @@ export async function getPlayerStats(usernames: string[], games: number, cb: (ms
 
     await cb(`fetched ${added} TL replays from \`${username}\``)
   }
-  if (replayIds.size == 0) {
+  if (replayIds.size == 0 && usernames.length>0) {
     await cb(`no replays able to be fetched`)
     throw Error()
   }
-
-  let replays = []
-
-  for (const id of replayIds) {
-    try {
-      const replay = await getReplay(id)
-      replays.push([id, replay])
-    } catch (error: any) {
-      await cb(`replay ${id} failed to download!`)
-      throw Error()
-    }
-  }
-  await cb(`downloaded ${replays.length} replays`)
-
-  try {
-    const [players, failed] = await parseReplayData(usernames, replays, cb)
-    return [players, failed]
-  } catch (e) {
-    await cb(`error parsing replay data, bad connection with action-parser`)
-    console.log("ERROR PARSING REPLAY DATA: ",e)
-    throw Error()
-  }
-}
-
-
-
-async function getReplay(id: string): Promise<string> {
-  const cachedReplay = await replayDataCache.get(id)
-  if (cachedReplay === undefined) {
-    const replayResponse = await fetch(`https://tetr.io/api/games/${id}`, opts)
-    if (replayResponse.status == 200) {
-      const data: any = await replayResponse.json()
-      const replayString = JSON.stringify(data.game)
-      replayDataCache.set(id, replayString)
-      return replayString
-    } else {
-      throw new Error("fetch error")
-    }
-  } else {
-    return cachedReplay
-  }
+  return [...replayIds.values()]
 }

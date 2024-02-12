@@ -16,5 +16,7 @@ Graph will no longer be scaled such that the average X rank player is in the mid
 Followed by usernames separated by spaces, alters the order of player stats presented. Any absent names will be presented in a random order after the ordered names.
 **-g --games**
 If you choose the Tetra League option, this alters the number of games to pull from each player, most recent games first.
+**-l --league**
+If you choose the files option, allows you to query games from league too. Usernames separated by spaces
 **!help**
 Display this message.
