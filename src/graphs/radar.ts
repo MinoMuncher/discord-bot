@@ -1,9 +1,6 @@
 import { createCanvas } from '@napi-rs/canvas'
 import { Chart } from 'chart.js/auto'
 import ChartDataLabels, { Context } from 'chartjs-plugin-datalabels';
-Chart.defaults.font.size = 20
-Chart.defaults.color = '#f9f6f2'
-Chart.defaults.borderColor = '#91908E'
 
 export type RadarConfig = {
   label: string,

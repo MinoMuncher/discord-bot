@@ -1,6 +1,13 @@
 import { Players } from "../stats";
 import { createLineClearGraph } from "./bar";
 import { createRadarGraph } from "./radar";
+import { createWellGraph } from "./well";
+import { Chart } from 'chart.js/auto'
+
+Chart.defaults.font.size = 20
+Chart.defaults.color = '#f9f6f2'
+Chart.defaults.borderColor = '#91908E'
+
 //scaling is pretty disorganized, pipe ended so this is how itll be done for now
 type Normalization = "average" | "stat"
 
@@ -9,6 +16,9 @@ export async function generateGraphs(stats: Players, norm: Normalization, scale:
     const edgeMult = 1.2
     {
         imageDatas.push(await createLineClearGraph(stats, order))
+    }
+    {
+        imageDatas.push(await createWellGraph(stats, order))
     }
     {
         let radarData: { [key: string]: number[] } = {}

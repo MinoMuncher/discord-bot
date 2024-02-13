@@ -3,8 +3,8 @@ import { type Players } from './stats'
 import { SyncSocket } from './util/tcp'
 import { MD5 } from 'bun'
 
-export async function parseReplayData(players: string[], replayIDs: string[], replayStrings: [string, string][], cb: (s: string)=>Promise<void>) : Promise<[Players, string[]]>{
-  const socket = await SyncSocket.CreateAsync({port: 8081})
+export async function parseReplayData(players: string[], replayIDs: string[], replayStrings: [string, string][], cb: (msg: string, over?: boolean)=>Promise<void>) : Promise<[Players, string[]]>{
+  const socket = await SyncSocket.CreateAsync({port: 8081, host: "127.0.0.1"})
   socket.writeLine(players.join(','))
   let replayResponses = []
   let failed = []
@@ -15,7 +15,7 @@ export async function parseReplayData(players: string[], replayIDs: string[], re
     socket.writeLine(replayIDs[i])
     const response = await socket.readLine()
     if(response!="success")failed.push(replayIDs[i])
-    replayResponses.push(cb(`${replayIDs[i]}: ${response}`))
+    replayResponses.push(cb(`${i}/${replayIDs.length+replayStrings.length} ${replayIDs[i]}: ${response}`, true))
   }
 
   socket.writeLine(String(replayStrings.length))
@@ -31,9 +31,9 @@ export async function parseReplayData(players: string[], replayIDs: string[], re
       socket.writeLine(replay)
       const response = await socket.readLine()
       if(response!="success")failed.push(replayStrings[i][0])
-      replayResponses.push(cb(`${replayStrings[i][0]}: ${response}`))
+      replayResponses.push(cb(`${i}/${replayIDs.length+replayStrings.length} ${replayStrings[i][0]}: ${response}`, true))
     }else{
-      replayResponses.push(cb(`${replayStrings[i][0]}: success`))
+      replayResponses.push(cb(`${i}/${replayIDs.length+replayStrings.length} ${replayStrings[i][0]}: success`, true))
     }
   }
   const stats : Players = JSON.parse(await socket.readLine())
@@ -42,7 +42,7 @@ export async function parseReplayData(players: string[], replayIDs: string[], re
 }
 
 
-export async function getLeagueReplayIds(usernames: string[], games: number, cb: (msg: string) => Promise<void>) : Promise<string[]>{
+export async function getLeagueReplayIds(usernames: string[], games: number, cb: (msg: string, over?: boolean) => Promise<void>) : Promise<string[]>{
   let replayIds = new Set<string>()
   for (const username of usernames) {
     let userData: any

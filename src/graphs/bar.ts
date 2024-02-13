@@ -2,10 +2,6 @@ import { type Players, type ClearTypes, ClearType } from "../stats"
 import { createCanvas } from '@napi-rs/canvas'
 import { Chart } from 'chart.js/auto'
 
-Chart.defaults.font.size = 20
-Chart.defaults.color = '#f9f6f2'
-Chart.defaults.borderColor = '#1e1e1e'
-
 function getTotalClears(stats: ClearTypes) {
     let total = 0;
     let key: ClearType

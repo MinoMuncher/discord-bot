@@ -19,6 +19,7 @@ export type ClearType =
 export type ClearTypes = {[key in ClearType] : number}
 
 export type PlayerStats = {
+    wellColumns: number[]
     clearTypes: ClearTypes,
 
     tEfficiency: number,

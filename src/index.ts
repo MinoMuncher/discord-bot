@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits } from "discord.js";
+import { Client, GatewayIntentBits, Message } from "discord.js";
 import { getLeagueReplayIds, parseReplayData } from "./replay";
 import { generateGraphs } from "./graphs/graph";
 import { RateLimiter } from 'discord.js-rate-limiter';
@@ -67,18 +67,26 @@ client.login(Bun.env.DISCORD_TOKEN);
 client.once("ready", () => {
   console.log(`Logged in as ${client.user!.tag}`);
 });
-client.on("messageCreate", async (message) => {
+client.on("messageCreate", message => {
+  try{
+    handleMessage(message)
+  }catch(e){
+    console.log(e)
+  }
+});
+
+async function handleMessage(message: Message<boolean>){
   if (message.author.bot) return;
   if (!message.content.startsWith(`${prefix}`)) {
     return
   }
   let msg = message.content.substring(1)
   if (msg.startsWith(`ping`)) {
-    message.reply(`pong! (${Date.now() - message.createdTimestamp}ms)`);
+    message.reply(`pong! (${Date.now() - message.createdTimestamp}ms)`).catch(console.error);;
     return
   }
   if (msg.startsWith("help")) {
-    message.reply(helpText)
+    message.reply(helpText).catch(console.error);
     return
   }
 
@@ -93,11 +101,19 @@ client.on("messageCreate", async (message) => {
   let leagueNames : string[] = args.league.map((a: any)=>String(a)).map((a:string) => a.toLowerCase())
 
   const order = args.order.map((a: string | number) => String(a).toLowerCase()).map(filterString).filter((a: string) => a != "");
-  const sent = await message.reply(`\n\ninitializing munching process for ${message.attachments.size} replay file${message.attachments.size == 1 ? "" : "s"}`)
+  const sent = await message.reply(`\ninitializing munching process`)
   let deleted = false
-  const cb = async (msg: string) => {
+  let overwrite = false
+  let edit = ""
+  const cb = async (msg: string, overwritable = false) => {
+    if(overwrite){
+      edit = edit.replace(/\n.*$/, '')
+      overwrite = false
+    }
+    if(overwritable)overwrite=true
     if(!deleted){
-      try{await sent.edit(msg)}catch(_){}
+      edit += '\n' + msg
+      try{await sent.edit(edit)}catch(_){}
     }
   }
 
@@ -154,14 +170,15 @@ client.on("messageCreate", async (message) => {
     graphs = await generateGraphs(stats, args.normalize ? "stat" : "average", args.scale, order)
   } catch (e) {
     await cb(`error generating graphs!`)
+    console.error(e)
     return
   }
-  deleted = true
-  await sent.delete()
   let files = graphs.map(buffer => { return { attachment: buffer, name: 'graph.webp' } })
   files.push({ attachment: Buffer.from(JSON.stringify(stats)), name: "rawStats.json" })
-  message.reply({ files, content: generateMessageContent(stats, failed) })
-});
+  message.reply({ files, content: generateMessageContent(stats, failed) }).catch(console.error);
+  deleted = true
+  sent.delete().catch(console.error);
+}
 
 function generateMessageContent(players: Players, failed: string[]) {
   let msg = ""
