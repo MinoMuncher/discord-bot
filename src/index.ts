@@ -144,6 +144,9 @@ async function handleMessage(message: Message<boolean>){
   }
   if (message.attachments.size == 0) {
     leagueNames = leagueNames.concat(names)
+    if(leagueNames.length == 0){
+      leagueNames = [message.author.username]
+    }
   }
 
   let replayIds
@@ -162,6 +165,12 @@ async function handleMessage(message: Message<boolean>){
   } catch (e) {
     console.log("ERROR PARSING REPLAY DATA: ",e)
     await cb(`error parsing replay data`)
+    return
+  }
+  
+
+  if(Object.keys(stats).length == 0){
+    await cb(`no data able to be parsed`)
     return
   }
 

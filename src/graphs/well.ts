@@ -3,7 +3,7 @@ import { createCanvas } from '@napi-rs/canvas'
 import ChartDataLabels, { Context } from 'chartjs-plugin-datalabels';
 import { Chart } from 'chart.js/auto'
 
-export async function createWellGraph(parsedPlayers: Players, order: string[]) {
+export async function createWellGraph(parsedPlayers: Players, scale: boolean, order: string[]) {
     const combinedCanvas = createCanvas(200 * 4, 200 * 4 * Object.keys(parsedPlayers).length)
     const combinedCanvasCtx = combinedCanvas.getContext('2d')
     let offset = 0
@@ -40,7 +40,7 @@ export async function createWellGraph(parsedPlayers: Players, order: string[]) {
                 scales: {
                     y: {
                         beginAtZero: true,
-                        max: 0.4
+                        max: scale ? Math.max(...stats.wellColumns)/total + 0.04 : 0.4
                     }
                 },
                 plugins:{

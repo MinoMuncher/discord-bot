@@ -18,7 +18,7 @@ export async function generateGraphs(stats: Players, norm: Normalization, scale:
         imageDatas.push(await createLineClearGraph(stats, order))
     }
     {
-        imageDatas.push(await createWellGraph(stats, order))
+        imageDatas.push(await createWellGraph(stats, scale, order))
     }
     {
         let radarData: { [key: string]: number[] } = {}
