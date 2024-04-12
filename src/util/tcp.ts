@@ -1,53 +1,61 @@
-import { connect, NetConnectOpts, Socket} from 'net'
+import { connect, NetConnectOpts, Socket } from 'net'
 
-export class SyncSocket{
+export class SyncSocket {
     socket: Socket
     receptionStringBuffer = ""
-    dataRecievedCallback = ()=>{}
-    private constructor(options: NetConnectOpts){
+    dataRecievedCallback = () => { }
+    private constructor(options: NetConnectOpts) {
         this.socket = connect(options)
-        this.socket.on("data", (data)=>{
+        this.socket.on("data", (data) => {
             this.recieveData(data)
         })
     }
-    writeLine(line: string){
+    writeLine(line: string) {
         this.socket.write(line + '\n')
     }
-    readLine(): Promise<string>{
-        return new Promise((resolve)=>{
+    readLine(): Promise<string> {
+        return new Promise((resolve) => {
             const line = this.processBuffer()
-            if(line!=undefined)resolve(line)
+            if (line != undefined) resolve(line)
 
-            this.dataRecievedCallback = ()=>{
+            this.dataRecievedCallback = () => {
                 const line = this.processBuffer()
-                if(line!=undefined)resolve(line)
+                if (line != undefined) resolve(line)
             }
         })
     }
-    processBuffer(): string | undefined{
+    processBuffer(): string | undefined {
         const newLineIndex = this.receptionStringBuffer.indexOf('\n')
-        if(newLineIndex!=-1){
+        if (newLineIndex != -1) {
             const line = this.receptionStringBuffer.substring(0, newLineIndex)
-            this.receptionStringBuffer = this.receptionStringBuffer.substring(newLineIndex+1)
+            this.receptionStringBuffer = this.receptionStringBuffer.substring(newLineIndex + 1)
             return line
         }
         return undefined
     }
-    private recieveData(data: Buffer){
+    private recieveData(data: Buffer) {
         this.receptionStringBuffer += data.toString()
         this.dataRecievedCallback()
     }
 
-    public static CreateAsync = (options: NetConnectOpts) : Promise<SyncSocket>=> {
-        return new Promise((resolve, reject)=>{
+    public static CreateAsync = (options: NetConnectOpts): Promise<SyncSocket> => {
+        return new Promise((resolve, reject) => {
             const me = new SyncSocket(options);
-            me.socket.on("connect", ()=>{
+            me.socket.on("connect", () => {
                 resolve(me);
             })
-            me.socket.on("close", ()=>{
+            me.socket.on("close", () => {
                 reject(new Error("failed to connect"))
             })
         })
 
-     };
+    };
+
+    public dispose() {
+        if (this.socket) {
+            this.socket.end();
+            this.socket.destroy();
+            this.socket = null;
+        }
+    }
 }
